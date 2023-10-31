@@ -1,7 +1,7 @@
 from typing import List, TypedDict
 
 """
-Defines the traits of the documents in each collection in our MongoDB
+Defines the structs of the documents in each collection in our MongoDB
 
 There are three collections in our DB
     - save_document: a collection for storing documents with a unique id
