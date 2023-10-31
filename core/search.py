@@ -1,6 +1,6 @@
 import pymongo
 from pymongo import MongoClient
-from core.structs import IdToDocTrait
+from core.structs import IdToDocStruct
 
 
 class DocumentSearch:
@@ -32,7 +32,7 @@ class DocumentSearch:
                     add_document_to_document_search in the `app.py`
                 - activates a connection to the idToDoc collection where the
                     document will be saved
-                - creates a document_data by type matching the idToDocTrait
+                - creates a document_data by type matching the idToDocStruct
                     imported from the core.structs
                 - inserts the document in the collection
                 - returns the inserted id
@@ -44,7 +44,8 @@ class DocumentSearch:
         """
         conn = self.db.IdToDoc
         # collection_count = conn.count_documents(filter={})
-        document_data: IdToDocTrait = {
+        document_data: IdToDocStruct = {
+            "document_type": "id_to_doc",
             "document": document
         }
         result = conn.insert_one(document_data)
