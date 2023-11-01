@@ -24,7 +24,7 @@ def get_index_html_template():
 
 
 @app.route('/add', methods=['POST'])
-def add_document_to_document_search():
+def add_document_to_db():
     """ 
         Returns a map (dict) of 'document_id':document_id entry.
         The function receives a document (a string) from the client.
@@ -35,23 +35,38 @@ def add_document_to_document_search():
         The function performs the following steps:
             - checks if the request method is a POST
             - receives the document string from the front end
-            - passes it to the save_document of the DocumentSearch class
-            - retrieves a document id
-        Args:
+            - passes it to the save_document of the DocumentSearch class of
+                which if successful, will return the document id, and the
+                db_conn.
+            - passes the document_id and db_conn to the save_words method of
+                the same class.
+            - retrieves the status of the save_words
+        Args (retrieved via the POST method):
             document : str - a string sent from the user with the intention of
                 adding to our search system / corpus. This argument is gotten
                 from the request object itself, via the request.get_json() method
                 of the flask api. This document string is what is passed to the
                 DocumentSearch class, expecting a string as return value
         Returns
-            Dict: a map/dict[str,str] with 'document_id' as key and document_id as value.
-                This document_id value is the string gotten from the save_document
+            Dict: a map/dict[str,bool] with 'save_status' as key and save status as value.
+                This save status value is the response gotten from the save_words
                 method of the DocumentSearch class
     """
     if request.method == 'POST':
         document = request.get_json()['document']
-        document_id = DocumentSearch( app.config["MONGO_URI"] ).save_document( document )
-        return jsonify({'document_id': document_id})
+        document_id, db_conn = DocumentSearch( app.config["MONGO_URI"] ).save_document( document )
+
+        if not document_id:
+            return jsonify({'document_id': document_id})
+        response = DocumentSearch(
+                        app.config["MONGO_URI"]
+                    ).save_words(
+                            document, 
+                            document_id,
+                            db_conn
+                        )
+
+        return jsonify({'document_id': response})
 
 
 @app.route('/search', methods=['POST'])

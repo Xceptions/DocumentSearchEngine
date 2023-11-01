@@ -14,6 +14,11 @@ class IdToDocStruct(TypedDict):
     document_type: str = "id_to_doc"
     document: str
 
+class WordToIdStruct(TypedDict):
+    document_type: str
+    word: str
+    ids: List[str]
+    
 # structs_id_to_doc: Dict[str, OneOrManyStrings] = {
 #     "type":string = "id_to_doc",
 #     "id":int,
