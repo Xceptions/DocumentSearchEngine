@@ -1,6 +1,9 @@
 import pymongo
 from pymongo import MongoClient, UpdateOne, InsertOne
+from bson.objectid import ObjectId
 from core.structs import IdToDocStruct, WordToIdStruct
+
+from typing import List
 
 
 class DocumentSearch:
@@ -71,19 +74,21 @@ class DocumentSearch:
             method in the app.py. It then saves the document(str) in our
             MongoDB collection (WordToId), and returns the operation status.
             The function performs the following steps:
-                - receives a document(str), document_id, and db_conn input from
-                    the add_document_to_db in the `app.py`
-                - converts the document(str) to a list of lowercase words called `words`
+                - receives a document(str), document_id, and db_conn input
+                    from the add_document_to_db in the `app.py`
+                - converts the document(str) to a list of lowercase words
+                    called `words`
                 - uses the db_conn to retrieve the documents(MongoDB) that
                     contains any word in `words`
-                - creates a set (word_set) of the words in `words` to be used for O(1)
-                    comparison
+                - creates a set (word_set) of the words in `words` to be used
+                    for O(1) comparison
                 - loops through the documents(MongoDB) and appends the document_id
-                    to the ids field of any word present in `words` and prepares it for
-                    an update while removing the word from word_set
-                - at the end of the loop, all words left in `words` will be the new words 
-                    that are not present in the document(MongoDB)
-                - loop through the word_set again and prepare these words for an insert
+                    to the ids field of any word present in `words` and prepares
+                    it for an update while removing the word from word_set
+                - at the end of the loop, all words left in `words` will be the
+                    new words that are not present in the document(MongoDB)
+                - loop through the word_set again and prepare these words for
+                    an insert
                 - bulkWrite the insert and update operations.
                 - Return the bulkWrite status
             Args:
@@ -103,47 +108,92 @@ class DocumentSearch:
             { "word": { "$in": words } }
         )
         for document in collection:
-            document[ids].append(document_id)
-            data_to_insert: WordToIdStruct = {
+            document["ids"].append(document_id)
+            data_to_update: WordToIdStruct = {
                 "document_type": "word_to_id",
-                "word": document[word],
-                "ids": document[ids]
+                "word": document["word"],
+                "ids": document["ids"]
             }
             bulk_write_operations.append(
-                updateOne({
-                    "filter": { "word": data_to_insert.word },
-                    "update": { "$set": {"ids": [ data_to_insert.ids ]} },
-                    "upsert": True
-                })
+                UpdateOne(
+                    { "word": data_to_update["word"] },
+                    { "$set": {
+                        "ids": data_to_update["ids"] + [document_id]
+                        }
+                    }
+                )
             )
-            word_set.remove(document[word])
+            word_set.remove(document["word"])
 
         for word in word_set:
+            data_to_insert: WordToIdStruct = {
+                "document_type": "word_to_id",
+                "word": word,
+                "ids": document_id
+            }
             bulk_write_operations.append(
                 InsertOne({
-                    "document": {
-                        "document_type": 'word_to_id',
-                        "word": word,
-                        "ids": [document_id]
-                    }
+                    "document_type": 'word_to_id',
+                    "word": word,
+                    "ids": [document_id]
                 })
             )
         result = db_conn.WordToId.bulk_write(bulk_write_operations)
         return result.acknowledged
 
-    def search(self, search_string):
-        all_occurrences = []
-        search_string = search_string.split(" ")
+    def search_for_word(self, user_input: str) -> List[str]:
+        """ 
+            Returns a list of the strings that contain the searched word.
+            The function receives a user_input (a string) from the
+            add_document_to_db method in the app.py.
+            It then retrieves the documents in our DB collection (WordToId),
+            containing that word, gets their corresponding ids and returns
+            the document (from IdToDoc) using the ids.
+            The function performs the following steps:
+                - receives a user input (str) from the 
+                    add_document_to_db in the `app.py`
+                - creates an all_occurrence list to hold a list of the ids
+                    that contain the words in user_input
+                - splits the user_input into a list of lowercase words called
+                    `words` for searching the db
+                - retrieves a collection of documents containing words in `words`
+                    from the WordToId collection
+                - for all the documents in the collection above, it extends their
+                    `ids` field into the all_occurrence. This `ids` field is a
+                    a list containing the _id of the documents that contain these
+                    words
+                - creates an `all_occurrence_id` to convert the all_occurrence
+                    List[str] to List[ObjectId(str)]. This is needed because that
+                    is the datatype stored in the MongoDB collection
+                - retrieves a collection of documents containing ObjectId(ids) in
+                    `all_occurrence_ids`
+                - returns a list of document(str) contained in documents(MongoDB)
+                    above or empty list
+            Args:
+                user_input(str) - a string sent from the add_document_to_db
+                    with the intention of searching our DB for it.
+            Returns
+                List: a list of the documents that contain the words in user_input
+        """
 
-        for string in search_string:
-            if string in self.document_search_graph:
-                all_occurrences.append(self.document_search_graph[string])
-        print(f'all_occurrences is {all_occurrences}')
-        
-        result_id = set().union(*all_occurrences)
-        print(f'result_id is {result_id}')
-        
-        return result_id or []
+        all_occurrences = []
+        words = user_input.lower().split(" ")
+
+        collection = self.db.WordToId.find(
+            { "word": { "$in": words } }
+        )
+        for doc in collection:
+            all_occurrences.extend(doc['ids'])
+
+        all_occurrences_id = [ObjectId(id) for id in set(all_occurrences)]
+
+        collection = self.db.IdToDoc.find(
+            { "_id": { "$in": all_occurrences_id } }
+        )
+        result = [doc['document'] for doc in collection]
+
+        return result or []
+
 
     def delete(self, word):
         # this is not the add to filter function. This is the

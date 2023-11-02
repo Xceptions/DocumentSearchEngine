@@ -57,28 +57,37 @@ def add_document_to_db():
         document_id, db_conn = DocumentSearch( app.config["MONGO_URI"] ).save_document( document )
 
         if not document_id:
-            return jsonify({'document_id': document_id})
-        response = DocumentSearch(
-                        app.config["MONGO_URI"]
-                    ).save_words(
-                            document, 
-                            document_id,
-                            db_conn
-                        )
+            return jsonify({'status': "unable to save document"})
 
+        response = DocumentSearch( app.config["MONGO_URI"] ).save_words(
+                                                                document, 
+                                                                document_id,
+                                                                db_conn
+                                                            )
         return jsonify({'document_id': response})
 
 
 @app.route('/search', methods=['POST'])
 def search_for_documents_containing_term():
     if request.method == 'POST':
-        data = request.get_json()
-        return jsonify({'document': data['document']})
+        document = request.get_json()['document']
+        response = DocumentSearch( app.config["MONGO_URI"] ).search_for_word( document )
+        return jsonify({'document': response})
 
 
 @app.route('/delete', methods=['POST'])
 def delete_document():
     if request.method == 'POST':
+        data = request.get_json()
+        return jsonify({'document': data['document']})
+
+def answer_question():
+    if request.method == 'POST':
+        # how does this work
+        # what languages and technologies rest in the backend
+        # does it cache any request
+        # What are additional ways to go about this
+        #   - 
         data = request.get_json()
         return jsonify({'document': data['document']})
 
