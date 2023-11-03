@@ -34,7 +34,7 @@ def add_document_to_db():
         with an expected return value of a document id.
         The function performs the following steps:
             - checks if the request method is a POST
-            - receives the document string from the front end
+            - receives the document string from the request object
             - passes it to the save_document of the DocumentSearch class of
                 which if successful, will return the document id, and the
                 db_conn.
@@ -48,8 +48,8 @@ def add_document_to_db():
                 of the flask api. This document string is what is passed to the
                 DocumentSearch class, expecting a string as return value
         Returns
-            Dict: a map/dict[str,bool] with 'save_status' as key and save status as value.
-                This save status value is the response gotten from the save_words
+            Dict: a map/dict[str,bool] with 'result' as key and document list as value.
+                This document_list value is the response gotten from the save_document
                 method of the DocumentSearch class
     """
     if request.method == 'POST':
@@ -73,6 +73,35 @@ def add_document_to_db():
 
 @app.route('/search', methods=['POST'])
 def search_for_documents_containing_term():
+    """ 
+        Returns a map (dict) of 'result':document_list.
+
+        document(str) -> input received from user to store in db
+        document(MongoDB) ->  the standard mongodb document
+
+        The function receives a document (a string) from the client.
+        It then passes it to the search_for_word method of the
+        DocumentSearch class, with the expectation of the document(str)
+        being saved as a document(MongoDB) to our MongoDB collection,
+        with an expected return value of all documents that contain the
+        term in our DB as a list.
+        The function performs the following steps:
+            - checks if the request method is a POST
+            - receives the document string from the request object
+            - passes it to the search_for_word method of the DocumentSearch
+                class of which, if successful, will return a list of the
+                documents(MongoDB) that contain the word
+            - it returns these documents as a json object to the front end
+        Args (retrieved via the POST method):
+            document : str - a string sent from the user with the intention of
+                adding to our search system / corpus. This argument is gotten
+                from the request object itself, via the request.get_json() method
+                of the flask api.
+        Returns
+            Dict: a map/dict[str,bool] with 'result' as key and response as value.
+                This response is the document_list gotten from the search_for_words
+                method of the DocumentSearch class
+    """
     if request.method == 'POST':
         user_input = request.get_json()['document']
         response = DocumentSearch( app.config["MONGO_URI"] ).search_for_word( user_input )
@@ -81,15 +110,63 @@ def search_for_documents_containing_term():
 
 @app.route('/delete', methods=['POST'])
 def delete_document():
+    """ 
+        Returns a map (dict) of [str, List[str]]
+
+        document(str) -> input received from user to store in db
+        document(MongoDB) ->  the standard mongodb document
+
+        The function receives a document (a string) from the client.
+        It then passes it to the delete method of the
+        DocumentSearch class, with the expectation of the document(MongoDB)
+        that contains the document(str) being from our MongoDB collection,
+        with an expected return value of all documents in our DB as a
+        list.
+        The function performs the following steps:
+            - checks if the request method is a POST
+            - receives the document string from the request object
+            - passes it to the delete method of the DocumentSearch
+                class of which, if successful, will return a list of all
+                the documents(MongoDB) in the DB
+            - it returns these documents as a json object to the front end
+        Args (retrieved via the POST method):
+            document : str - a string sent from the user with the intention of
+                deleting from our DB. This argument is gotten
+                from the request object itself, via the request.get_json() method
+                of the flask api.
+        Returns
+            Dict: a map/dict[str,List[str]] with 'result' as key and response as value.
+                This response is the document_list gotten from the delete
+                method of the DocumentSearch class
+    """
     if request.method == 'POST':
         data = request.get_json()['document']
-        result = DocumentSearch( app.config["MONGO_URI"] ).delete(data)
-        return jsonify({'result': result})
+        response = DocumentSearch( app.config["MONGO_URI"] ).delete(data)
+        return jsonify({'result': response})
 
-@app.route('/cleardb')
-def clear_db():
-    result = DocumentSearch( app.config["MONGO_URI"] ).clear_db()
-    return jsonify({'result': result})
+
+@app.route('/dropdb')
+def drop_db():
+    """ 
+        Returns a map (dict) of [str, str]
+
+        This function drops both collections from the db
+        The function performs the following steps:
+            - receives the request from the client
+            - calls the drop method of the DocumentSearch
+                class of which, if successful, will drop the WordToId and IdToDoc
+                collections, and returns
+            - it returns these documents as a json object to the client
+        Args:
+            None
+        Returns
+            Dict: a map/dict[str,List[str]] with 'result' as key and response as value.
+                This response is the status of dropping the two collections from the db
+    """
+    response = DocumentSearch( app.config["MONGO_URI"] ).drop_db()
+    print(response)
+    return jsonify({'result': response})
+
 
 def answer_question():
     if request.method == 'POST':

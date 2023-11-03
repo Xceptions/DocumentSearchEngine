@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     document.getElementById('add_document').addEventListener('click', addDocumentHandler);
     document.getElementById('search_btn').addEventListener('click', searchForWordsHandler);
-    document.getElementById('clear_db').addEventListener('click', clearDBHandler);
+    document.getElementById('drop_db').addEventListener('click', dropDBHandler);
 
     async function addDocumentHandler() {
         var input_document = document.getElementById('input_document').value;
@@ -97,8 +97,8 @@ document.addEventListener('DOMContentLoaded', function(){
         });
     }
 
-    async function clearDBHandler() {
-        fetch('/cleardb')
+    async function dropDBHandler() {
+        fetch('/dropdb')
         .then(function( response ){
             return response.json();
         })

@@ -237,7 +237,7 @@ class DocumentSearch:
             documents_list
         )
 
-    def clear_db(self):
+    def drop_db(self):
         """
         Returns the status of dropping both collections in the db
         Args:
