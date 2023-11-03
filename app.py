@@ -54,7 +54,11 @@ def add_document_to_db():
     """
     if request.method == 'POST':
         document = request.get_json()['document']
-        document_id, db_conn = DocumentSearch( app.config["MONGO_URI"] ).save_document( document )
+        document_id, db_conn, document_list = DocumentSearch(
+                                                app.config["MONGO_URI"]
+                                            ).save_document(
+                                                document
+                                            )
 
         if not document_id:
             return jsonify({'status': "unable to save document"})
@@ -64,22 +68,28 @@ def add_document_to_db():
                                                                 document_id,
                                                                 db_conn
                                                             )
-        return jsonify({'document_id': response})
+        return jsonify({'document_id': document_list})
 
 
 @app.route('/search', methods=['POST'])
 def search_for_documents_containing_term():
     if request.method == 'POST':
-        document = request.get_json()['document']
-        response = DocumentSearch( app.config["MONGO_URI"] ).search_for_word( document )
+        user_input = request.get_json()['document']
+        response = DocumentSearch( app.config["MONGO_URI"] ).search_for_word( user_input )
         return jsonify({'document': response})
 
 
 @app.route('/delete', methods=['POST'])
 def delete_document():
     if request.method == 'POST':
-        data = request.get_json()
-        return jsonify({'document': data['document']})
+        data = request.get_json()['document']
+        result = DocumentSearch( app.config["MONGO_URI"] ).delete(data)
+        return jsonify({'result': result})
+
+@app.route('/cleardb')
+def clear_db():
+    result = DocumentSearch( app.config["MONGO_URI"] ).clear_db()
+    return jsonify({'document': result})
 
 def answer_question():
     if request.method == 'POST':
@@ -88,8 +98,9 @@ def answer_question():
         # does it cache any request
         # What are additional ways to go about this
         #   - 
-        data = request.get_json()
-        return jsonify({'document': data['document']})
+        user_input = request.get_json()['document']
+        response = DocumentSearch( app.config["MONGO_URI"] ).delete( user_input )
+        return jsonify({'document': response})
 
 
 if __name__ == "__main__":

@@ -51,9 +51,12 @@ class DocumentSearch:
             "document": document
         }
         result = conn.insert_one(document_data)
+        all_documents = conn.find()
+        documents_list = [doc['document'] for doc in all_documents]
         return (
             str(result.inserted_id),
-            self.db
+            self.db,
+            documents_list
         )
 
 
@@ -173,7 +176,7 @@ class DocumentSearch:
                 user_input(str) - a string sent from the add_document_to_db
                     with the intention of searching our DB for it.
             Returns
-                List: a list of the documents that contain the words in user_input
+                List[str]: a list of the documents that contain the words in user_input
         """
 
         all_occurrences = []
@@ -195,7 +198,26 @@ class DocumentSearch:
         return result or []
 
 
-    def delete(self, word):
-        # this is not the add to filter function. This is the
-        # main delete that gets called once in a month
-        pass
+    def delete(self, user_input: str):
+        result = self.db.IdToDoc.delete_many({"document": user_input})
+        print(result)
+        conn = self.db.IdToDoc
+        all_documents = conn.find()
+        documents_list = [doc['document'] for doc in all_documents]
+        return (
+            str(result),
+            documents_list
+        )
+
+    def clear_db(self):
+        """
+        Returns the status of dropping both collections in the db
+        Args:
+            None
+        Returns
+            Dict[str, str]: the status of dropping the collections
+        """
+        drop_IdToDoc = self.db.drop_collection("IdToDoc")
+        drop_WordToId = self.db.drop_collection("WordToId")
+        return drop_IdToDoc and drop_WordToId
+        
