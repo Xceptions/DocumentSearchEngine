@@ -3,7 +3,7 @@ from pymongo import MongoClient, UpdateOne, InsertOne
 from bson.objectid import ObjectId
 from core.structs import IdToDocStruct, WordToIdStruct
 
-from typing import List
+from typing import List, Tuple
 
 
 class DocumentSearch:
@@ -26,10 +26,11 @@ class DocumentSearch:
     def save_document(self, document:str) -> str:
         """ 
             Returns the document id of the inserted document.
-            The function receives a document (a string) from the
+            The function receives a document(str) from the
             add_document_to_db method in the app.py.
             It then saves the document in our MongoDB collection (idToDoc),
-            and returns the inserted id.
+            and returns the inserted id, and all the document(str) stored
+            in our collection.
             The function performs the following steps:
                 - receives a document (str) input from the 
                     add_document_to_db in the `app.py`
@@ -38,7 +39,9 @@ class DocumentSearch:
                 - creates a document_data by type matching the idToDocStruct
                     imported from the core.structs
                 - inserts the document in the collection
-                - returns the inserted id
+                - retrieves all documents in our IdToDoc collection as all_documents
+                - retrieves their documents(str) as a list called documents_list
+                - returns the insert status, and documents_list
             Args:
                 document(str) - a string sent from the add_document_to_db
                     with the intention of adding to our search system / corpus.
@@ -198,9 +201,34 @@ class DocumentSearch:
         return result or []
 
 
-    def delete(self, user_input: str):
+    def delete(self, user_input: str) -> Tuple[str, List[str]]:
+        """
+            Returns a tuple of the strings and lists.
+
+            document(str) -> input received from user to store in db
+            document(MongoDB) ->  the standard mongodb document
+
+            The function receives a user_input (a string) from the
+            add_document_to_db method in the app.py.
+            It then deletes the documents in our DB collection (WordToId),
+            containing that string, gets all the documents(MongoDB) in the
+            idToDoc collections, and returns the document(str) in them.
+            The function performs the following steps:
+                - receives a user input (str) from the 
+                    add_document_to_db in the `app.py`
+                - deletes the document(MongoDB) containing that document(str) in
+                    the collection
+                - retrieves all documents in our IdToDoc collection as all_documents
+                - retrieves their documents(str) as a list called documents_list
+            Args:
+                user_input(str) - a string sent from the add_document_to_db
+                    with the intention of deleting it from our.
+            Returns
+                Tuple[str, List[str]]: a tuple of the delete status sent as a string
+                and documents that contain the words in user_input
+        """
+
         result = self.db.IdToDoc.delete_many({"document": user_input})
-        print(result)
         conn = self.db.IdToDoc
         all_documents = conn.find()
         documents_list = [doc['document'] for doc in all_documents]

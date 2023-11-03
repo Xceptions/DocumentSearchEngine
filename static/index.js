@@ -1,26 +1,20 @@
-document.addEventListener('DOMContentLoaded', function(){
+async function delInput(user_input) {
 
-    document.getElementById('add_document').addEventListener('click', addDocumentHandler);
-    document.getElementById('search_btn').addEventListener('click', searchForWordsHandler);
-    document.getElementById('clear_db').addEventListener('click', clearDBHandler);
-
-    function delInput(user_input) {
-
-        fetch('/delete', {
-            method: "POST",
-            body: JSON.stringify({
-                document: user_input
-            }),
-            headers: {
-                "Content-type": "application/json; charset=UTF-8"
-            }
-        })
-        .then(function( response ){
-            return response.json();
-        })
-        .then(function( result ){
-            console.log(JSON.stringify(result));
-            result_val = result['document_id']
+    fetch('/delete', {
+        method: "POST",
+        body: JSON.stringify({
+            document: user_input
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    })
+    .then(function( response ){
+        return response.json();
+    })
+    .then(function( result ){
+        console.log(JSON.stringify(result));
+        result_val = result['result'][1]
             var added_strings = '<div class="">';
             for (let idx in result_val) {
                 var temp = '<p>';
@@ -30,11 +24,18 @@ document.addEventListener('DOMContentLoaded', function(){
             };
             added_strings += '</div>';
             console.log(added_strings)
-            document.getElementById('wordsAddedToCorpus').innerHTML = added_strings;	
-        });
-    }
+            document.getElementById('wordsAddedToCorpus').innerHTML = added_strings;
+    });
+}
 
-    function addDocumentHandler() {
+document.addEventListener('DOMContentLoaded', function(){
+
+
+    document.getElementById('add_document').addEventListener('click', addDocumentHandler);
+    document.getElementById('search_btn').addEventListener('click', searchForWordsHandler);
+    document.getElementById('clear_db').addEventListener('click', clearDBHandler);
+
+    async function addDocumentHandler() {
         var input_document = document.getElementById('input_document').value;
 
         fetch('/add', {
@@ -51,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function(){
         })
         .then(function( result ){
             console.log(JSON.stringify(result));
-            result_val = result['document_id']
+            result_val = result['result']
             var added_strings = '<div class="">';
             for (let idx in result_val) {
                 var temp = '<p>';
@@ -65,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function(){
         });
     }
 
-    function searchForWordsHandler() {
+    async function searchForWordsHandler() {
         var input_document = document.getElementById('search_term').value;
 
         fetch('/search', {
@@ -81,11 +82,22 @@ document.addEventListener('DOMContentLoaded', function(){
             return response.json();
         })
         .then(function( result ){
-            console.log(JSON.stringify(result));	
+            console.log(JSON.stringify(result));
+            result_val = result['result']
+            var added_strings = '<div class="">';
+            for (let idx in result_val) {
+                var temp = '<p>';
+                temp += result_val[idx];
+                temp += '</p>';
+                added_strings += temp;
+            };
+            added_strings += '</div>';
+            console.log(added_strings)
+            document.getElementById('wordsContainingSearchTerm').innerHTML = added_strings;
         });
     }
 
-    function clearDBHandler() {
+    async function clearDBHandler() {
         fetch('/cleardb')
         .then(function( response ){
             return response.json();

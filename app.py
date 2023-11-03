@@ -26,7 +26,7 @@ def get_index_html_template():
 @app.route('/add', methods=['POST'])
 def add_document_to_db():
     """ 
-        Returns a map (dict) of 'document_id':document_id entry.
+        Returns a map (dict) of 'result':document_id entry.
         The function receives a document (a string) from the client.
         It then passes it to the save method of the DocumentSearch
         class, with the expectation of the document (our term) being
@@ -68,7 +68,7 @@ def add_document_to_db():
                                                                 document_id,
                                                                 db_conn
                                                             )
-        return jsonify({'document_id': document_list})
+        return jsonify({'result': document_list})
 
 
 @app.route('/search', methods=['POST'])
@@ -76,7 +76,7 @@ def search_for_documents_containing_term():
     if request.method == 'POST':
         user_input = request.get_json()['document']
         response = DocumentSearch( app.config["MONGO_URI"] ).search_for_word( user_input )
-        return jsonify({'document': response})
+        return jsonify({'result': response})
 
 
 @app.route('/delete', methods=['POST'])
@@ -89,7 +89,7 @@ def delete_document():
 @app.route('/cleardb')
 def clear_db():
     result = DocumentSearch( app.config["MONGO_URI"] ).clear_db()
-    return jsonify({'document': result})
+    return jsonify({'result': result})
 
 def answer_question():
     if request.method == 'POST':
@@ -100,7 +100,7 @@ def answer_question():
         #   - 
         user_input = request.get_json()['document']
         response = DocumentSearch( app.config["MONGO_URI"] ).delete( user_input )
-        return jsonify({'document': response})
+        return jsonify({'result': response})
 
 
 if __name__ == "__main__":
