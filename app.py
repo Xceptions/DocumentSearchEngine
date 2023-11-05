@@ -37,21 +37,30 @@ def get_index_html_template():
 @app.route('/add', methods=['POST'])
 def add_document_to_db():
     """ 
-        Returns a map (dict) of 'result':document_id entry.
-        The function receives a document (a string) from the client.
-        It then passes it to the save method of the DocumentSearch
-        class, with the expectation of the document (our term) being
-        saved as a document (mongodb term) to our MongoDB collection,
-        with an expected return value of a document id.
+        Returns a map (dict) of 'result':document_list entry.
+        The function receives a document (a string) from the 
+        client and resolves it asynchronously with two methods
+        using celery. It asynchronously calls both the `save_document`
+        and the `save_words` of the `core.search.DocumentSearch`
+        class. It returns the result of the `save_document` method
+        which is a list of document(str) from the document(MongoDB)
         The function performs the following steps:
             - checks if the request method is a POST
             - receives the document string from the request object
-            - passes it to the save_document of the DocumentSearch class of
-                which if successful, will return the document id, and the
-                db_conn.
-            - passes the document_id and db_conn to the save_words method of
-                the same class.
-            - retrieves the status of the save_words
+            - generate an ObjectId that will be used to save both the
+                document in the IdToDoc and words in the WordToIds collections
+            - creates a save_document_task kwargs for calling `save_document`
+            - creates the `save_document_task` method using the celery app
+                instance created above. This method asynchronously passes the
+                kwargs to a method in `core.tasks` called `call_save_document`
+                which will actually call the `save_document` method of the
+                `core.search.DocumentSearch` class.
+            - `save_document_tasks` backend is logged
+            - steps 4,5,6 are repeated for the save_words_task
+            - both tasks run asynchronously and their results are gotten using
+                the `AsyncResult(task id).get()` method of the celery_app
+            - result of `save_document` which will be a list of strings is
+                returned as a JSON object, with 'result' as key
         Args (retrieved via the POST method):
             document : str - a string sent from the user with the intention of
                 adding to our search system / corpus. This argument is gotten
@@ -59,16 +68,15 @@ def add_document_to_db():
                 of the flask api. This document string is what is passed to the
                 DocumentSearch class, expecting a string as return value
         Returns
-            Dict: a map/dict[str,bool] with 'result' as key and document list as value.
-                This document_list value is the response gotten from the save_document
-                method of the DocumentSearch class
+            Dict: a map/dict[str,List[str]] with 'result' as key and document list
+                as value. This document_list value is the response gotten from the
+                save_document method of the DocumentSearch class
     """
     app.logger.info("Invoking the add_document_to_db method")
     if request.method == 'POST':
         document = request.get_json()['document']
-        # generate object id by myself
         document_id = ObjectId()
-        # process object as json
+
         save_document_task_kwargs = json.loads(
                                         json_util.dumps({
                                             'mongo_uri': app.config["MONGO_URI"],
@@ -127,7 +135,7 @@ def search_for_documents_containing_term():
                 from the request object itself, via the request.get_json() method
                 of the flask api.
         Returns
-            Dict: a map/dict[str,bool] with 'result' as key and response as value.
+            Dict: a map/dict[str,List[str]] with 'result' as key and response as value.
                 This response is the document_list gotten from the search_for_words
                 method of the DocumentSearch class
     """
