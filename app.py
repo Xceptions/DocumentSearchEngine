@@ -1,15 +1,26 @@
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
-# from flask_pymongo import PyMongo
+from bson.objectid import ObjectId
+from bson import json_util
 from core.search import DocumentSearch
+from core import tasks
+from core.tasks import call_save_document
+from celery import Celery
 import json
 
 app = Flask(__name__)
 CORS(app)
 
-app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.0.2"
-# mongo = PyMongo(app)
+app.config["CELERY_BROKER_URL"] = "amqp://admin:mypass@localhost"
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+celery_app = Celery(
+                'core',
+                broker=app.config["CELERY_BROKER_URL"],
+                backend=app.config["CELERY_RESULT_BACKEND"]
+            )
+
 
 
 @app.route('/')
@@ -52,22 +63,40 @@ def add_document_to_db():
                 This document_list value is the response gotten from the save_document
                 method of the DocumentSearch class
     """
+    app.logger.info("Invoking the add_document_to_db method")
     if request.method == 'POST':
         document = request.get_json()['document']
-        document_id, db_conn, document_list = DocumentSearch(
-                                                app.config["MONGO_URI"]
-                                            ).save_document(
-                                                document
-                                            )
+        # generate object id by myself
+        document_id = ObjectId()
+        # process object as json
+        save_document_task_kwargs = json.loads(
+                                        json_util.dumps({
+                                            'mongo_uri': app.config["MONGO_URI"],
+                                            'document': document,
+                                            'document_id': document_id
+                                        })
+                                    )
+        save_document_task = celery_app.send_task(
+                                'core.tasks.call_save_document',
+                                kwargs=save_document_task_kwargs
+                            )
+        app.logger.info(save_document_task.backend)
 
-        if not document_id:
-            return jsonify({'status': "unable to save document"})
+        save_words_task_kwargs = json.loads(
+                                    json_util.dumps({
+                                        'mongo_uri': app.config["MONGO_URI"],
+                                        'document': document,
+                                        'document_id': document_id
+                                    })
+                                )
+        save_words_task = celery_app.send_task(
+                                'core.tasks.call_save_words',
+                                kwargs=save_words_task_kwargs
+                            )
+        app.logger.info(save_words_task.backend)
 
-        response = DocumentSearch( app.config["MONGO_URI"] ).save_words(
-                                                                document, 
-                                                                document_id,
-                                                                db_conn
-                                                            )
+        document_list = celery_app.AsyncResult(save_document_task.id).get()
+        words_saved = celery_app.AsyncResult(save_words_task.id).get()
         return jsonify({'result': document_list})
 
 
@@ -164,7 +193,6 @@ def drop_db():
                 This response is the status of dropping the two collections from the db
     """
     response = DocumentSearch( app.config["MONGO_URI"] ).drop_db()
-    print(response)
     return jsonify({'result': response})
 
 

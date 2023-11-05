@@ -12,11 +12,13 @@ There are three collections in our DB
 
 class IdToDocStruct(TypedDict):
     document_type: str = "id_to_doc"
+    _id: str
     document: str
 
 
 class WordToIdStruct(TypedDict):
-    document_type: str
+    document_type: str = "word_to_id"
+    _id: str
     word: str
     ids: List[str]
     
