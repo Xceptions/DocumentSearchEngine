@@ -30,10 +30,13 @@ async function delInput(user_input) {
 
 document.addEventListener('DOMContentLoaded', function(){
 
-
     document.getElementById('add_document').addEventListener('click', addDocumentHandler);
     document.getElementById('search_btn').addEventListener('click', searchForWordsHandler);
     document.getElementById('drop_db').addEventListener('click', dropDBHandler);
+    document.getElementById('q1_btn').addEventListener('click', questionHandler.bind(null, 'q1'));
+    document.getElementById('q2_btn').addEventListener('click', questionHandler.bind(null, 'q2'));
+    document.getElementById('q3_btn').addEventListener('click', questionHandler.bind(null, 'q3'));
+    document.getElementById('q4_btn').addEventListener('click', questionHandler.bind(null, 'q4'));
 
     async function addDocumentHandler() {
         var input_document = document.getElementById('input_document').value;
@@ -104,6 +107,26 @@ document.addEventListener('DOMContentLoaded', function(){
         })
         .then(function( result ){
             console.log(JSON.stringify(result));
+        });
+    }
+
+    async function questionHandler(question) {
+        var question_text = document.getElementById(question).textContent;
+        fetch('/answer', {
+            method: "POST",
+            body: JSON.stringify({
+                question: question_text
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+        .then(function( response ){
+            return response.json();
+        })
+        .then(function( result ){
+            console.log(JSON.stringify(result));
+            document.getElementById(question + "_ans").innerHTML = "Ans: " + result['result'];
         });
     }
 });

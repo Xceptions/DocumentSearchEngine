@@ -6,6 +6,7 @@ from core.search import DocumentSearch
 from core import tasks
 from core.tasks import call_save_document
 from celery import Celery
+from core.info import Info
 import json
 
 app = Flask(__name__)
@@ -203,16 +204,11 @@ def drop_db():
     response = DocumentSearch( app.config["MONGO_URI"] ).drop_db()
     return jsonify({'result': response})
 
-
+@app.route('/answer', methods=['POST'])
 def answer_question():
     if request.method == 'POST':
-        # how does this work
-        # what languages and technologies rest in the backend
-        # does it cache any request
-        # What are additional ways to go about this
-        #   - 
-        user_input = request.get_json()['document']
-        response = DocumentSearch( app.config["MONGO_URI"] ).delete( user_input )
+        user_input = request.get_json()['question']
+        response = Info( app.config["MONGO_URI"] ).get_answer( user_input )
         return jsonify({'result': response})
 
 

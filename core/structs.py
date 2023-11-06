@@ -3,11 +3,9 @@ from typing import List, TypedDict
 """
 Defines the structs of the documents in each collection in our MongoDB
 
-There are three collections in our DB
-    - save_document: a collection for storing documents with a unique id
-    - word_to_id: A ReverseIndex collection for storing words to id
-    - deleted_documents: a collection that holds the ids of deleted documents. \
-        It will be used to filter responses to the client
+There are two collections in our DB
+    - IdToDocStruct: a collection for storing documents with a unique id
+    - WordToIdStruct: A ReverseIndex collection for storing words to id
 """
 
 class IdToDocStruct(TypedDict):
@@ -23,7 +21,6 @@ class WordToIdStruct(TypedDict):
     ids: List[str]
     
 
-# structs_deleted_documents = {
-#     "type":string = "deleted_documents",
-#     "values":List = []
-# }
+class InfoStruct(TypedDict):
+    question: str
+    answer: str
