@@ -30,23 +30,23 @@ class Info:
             creates one if it doesn't, and inserts the
             questions and their corresponding answers
         """
-        # self.db.drop_collection("Info")
+        self.db.drop_collection("Info")
         if not self.db.Info.count_documents({}):
             self.db.Info.insert_many([
                 {
-                    "question": "how does this work?",
+                    "question": "how does this work",
                     "answer": "It works on by assigning a document id to each document"
                 },
                 {
-                    "question": "what languages and technologies rest in the backend?",
+                    "question": "what languages and technologies rest in the backend",
                     "answer": "Python, Flask, Celery, Javascript, HTML, CSS, MongoDB"
                 },
                 {
-                    "question": "does it cache any request?",
+                    "question": "does it cache any request",
                     "answer": "yes it does, like this one for example. Redis is our cache"
                 },
                 {
-                    "question": "what are additional ways to go about this?",
+                    "question": "what are additional ways to go about this",
                     "answer": "use react as the frontend"
                 }
             ])

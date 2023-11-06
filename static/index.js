@@ -112,14 +112,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
     async function questionHandler(question) {
         var question_text = document.getElementById(question).textContent;
-        fetch('/answer', {
-            method: "POST",
-            body: JSON.stringify({
-                question: question_text
-            }),
-            headers: {
-                "Content-type": "application/json; charset=UTF-8"
-            }
+        fetch('/answer/' + question_text, {
+            method: 'GET',
         })
         .then(function( response ){
             return response.json();

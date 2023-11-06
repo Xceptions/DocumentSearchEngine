@@ -1,16 +1,28 @@
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
+from flask_caching import Cache
+
 from bson.objectid import ObjectId
 from bson import json_util
+
 from core.search import DocumentSearch
 from core import tasks
-from core.tasks import call_save_document
-from celery import Celery
 from core.info import Info
+
+from celery import Celery
+import redis
 import json
 
 app = Flask(__name__)
 CORS(app)
+
+cache = Cache(app, config={
+    'CACHE_TYPE': 'redis',
+    'CACHE_KEY_PREFIX': 'server1',
+    'CACHE_REDIS_HOST': 'localhost',
+    'CACHE_REDIS_PORT': '6379',
+    'CACHE_REDIS_URL': 'redis://localhost:6379/1'
+})
 
 app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.0.2"
 app.config["CELERY_BROKER_URL"] = "amqp://admin:mypass@localhost"
@@ -204,13 +216,10 @@ def drop_db():
     response = DocumentSearch( app.config["MONGO_URI"] ).drop_db()
     return jsonify({'result': response})
 
-@app.route('/answer', methods=['POST'])
-def answer_question():
-    if request.method == 'POST':
-        user_input = request.get_json()['question']
-        response = Info( app.config["MONGO_URI"] ).get_answer( user_input )
-        return jsonify({'result': response})
 
+@app.route('/answer/<question>')
+@cache.cached(timeout=10)
+def answer_question(question):
+    response = Info( app.config["MONGO_URI"] ).get_answer( question )
+    return jsonify({'result': response})
 
-if __name__ == "__main__":
-    app.run()
