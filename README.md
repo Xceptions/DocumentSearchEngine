@@ -14,5 +14,14 @@ Tools:
 
 To run:
 
-1. clone the repo
-   `git clone https://github.com/Xceptions/DocumentSearchEngine.git`
+1. Clone the repo
+
+```
+git clone https://github.com/Xceptions/DocumentSearchEngine.git
+```
+
+2. Start the app
+
+```
+python3 app.py
+```
