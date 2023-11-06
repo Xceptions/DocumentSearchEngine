@@ -220,6 +220,22 @@ def drop_db():
 @app.route('/answer/<question>')
 @cache.cached(timeout=10)
 def answer_question(question):
+    """ 
+        Returns a map (dict) of [str, str]
+
+        This function drops both collections from the db
+        The function performs the following steps:
+            - receives the request data `question` from the client
+            - calls the get_answer method of the Info which will
+                fetch the answer to the question and return it
+            - it returns the answer as a json object to the client
+        Args:
+            question: str - Question asked from the client
+        Returns
+            Dict: [str,List[str]] with 'result' as key and response
+                as value. This response is the answer to the question
+                received from the client
+    """
     response = Info( app.config["MONGO_URI"] ).get_answer( question )
     return jsonify({'result': response})
 
