@@ -239,3 +239,6 @@ def answer_question(question):
     response = Info( app.config["MONGO_URI"] ).get_answer( question )
     return jsonify({'result': response})
 
+
+if __name__ == "__main__":
+    app.run()
