@@ -11,3 +11,8 @@ Tools:
 4. Class-Based design
 5. Backend Language: Python
 6. Frontend Language: Vanilla JS
+
+To run:
+
+1. clone the repo
+   `git clone https://github.com/Xceptions/DocumentSearchEngine.git`
