@@ -25,7 +25,7 @@ cache = Cache(app, config={
 })
 
 app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.0.2"
-app.config["CELERY_BROKER_URL"] = "amqp://admin:mypass@localhost"
+app.config["CELERY_BROKER_URL"] = "amqp://admin:mypass@localhost:5672//"
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
 celery_app = Celery(

@@ -131,7 +131,8 @@ class DocumentSearch:
                     }
                 )
             )
-            word_set.remove(document["word"])
+            if document["word"] in word_set:
+                word_set.remove(document["word"])
 
         for word in word_set:
             data_to_insert: WordToIdStruct = {
