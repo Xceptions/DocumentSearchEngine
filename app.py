@@ -205,7 +205,7 @@ def drop_db():
             - receives the request from the client
             - calls the drop method of the DocumentSearch
                 class of which, if successful, will drop the WordToId and IdToDoc
-                collections, and returns
+                collections
             - it returns these documents as a json object to the client
         Args:
             None
@@ -223,7 +223,6 @@ def answer_question(question):
     """ 
         Returns a map (dict) of [str, str]
 
-        This function drops both collections from the db
         The function performs the following steps:
             - receives the request data `question` from the client
             - calls the get_answer method of the Info which will
