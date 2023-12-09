@@ -3,7 +3,7 @@
 **Optimal Search System for finding all documents containing search term**
 ![alt text](./images/DSdesign.png)
 
-**Find the Go version ![here](https://github.com/Xceptions/DocumentSearchEngineGo.git)**
+**Find the Go version [here](https://github.com/Xceptions/DocumentSearchEngineGo.git)**
 
 Tools:
 
