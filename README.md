@@ -3,6 +3,8 @@
 **Optimal Search System for finding all documents containing search term**
 ![alt text](./images/DSdesign.png)
 
+**Find the Go version ![here](https://github.com/Xceptions/DocumentSearchEngineGo.git)**
+
 Tools:
 
 1. Task-Queue distributed saving of documents using celery
